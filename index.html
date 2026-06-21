@@ -14,15 +14,15 @@
   --bg:#f5f0eb;--bg2:#fff;--bg3:#fdf6ee;--sidebar:#1a0f00;
   --orange:#c2570a;--orange2:#e06d1a;--orange-dim:rgba(194,87,10,.12);
   --brown:#5c3317;--brown2:#3d2009;
-  --text:#1a0f00;--text2:#5c3317;--text3:#00101d;
+  --text:#1a0f00;--text2:#5c3317;--text3:#a07850;
   --border:#e8d8c4;--border2:#d4b896;
   --green:#2d7a3a;--red:#c0392b;--blue:#1a5c99;--yellow:#b8860b;
   --input-bg:#fffaf5;
   --shadow:0 2px 12px rgba(92,51,23,.10);
   --shadow2:0 4px 24px rgba(92,51,23,.16);
   --radius:10px;--radius2:14px;
-  --font-display: 'Poppins', Poppins;
-  --font-body: 'Poppins', Poppins;
+  --font-display: 'Poppins', sans-serif;
+  --font-body: 'Poppins', sans-serif;
   --sidebar-w:230px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -949,7 +949,6 @@ const PAGES=[
   {id:'laporan',      label:'Laporan',             icon:'ti-chart-bar',        group:'LAPORAN',   roles:['owner','admin']},
   {id:'pengaturan',   label:'Pengaturan',          icon:'ti-settings',         group:'SISTEM',    roles:['owner','admin']},
   {id:'backup',       label:'Backup & Restore',    icon:'ti-database-export',  group:'SISTEM',    roles:['owner']},
-  {id:'log_login',    label:'Log Login',           icon:'ti-clipboard-data',   group:'SISTEM',    roles:['owner']},
 ];
 
 // Helper: cek apakah role saat ini boleh akses halaman
@@ -4450,110 +4449,6 @@ async function doRestore(){
   btn.disabled=false;
   _restoreData=null;
   document.getElementById('restore-file').value='';
-}
-
-// ============================================================
-// LOG LOGIN PAGE
-// ============================================================
-pages['log_login']=async()=>{
-  document.getElementById('content').innerHTML=`
-  <div class="page-header">
-    <div class="page-title"><i class="ti ti-clipboard-data"></i> Log Login</div>
-    <button class="btn btn-outline" onclick="showPage('log_login',true)"><i class="ti ti-refresh"></i> Refresh</button>
-  </div>
-  <div class="search-row">
-    <input class="form-input" type="date" id="log-dari" style="width:140px"/>
-    <input class="form-input" type="date" id="log-sampai" style="width:140px"/>
-    <select class="form-input" id="log-role" style="width:120px">
-      <option value="">Semua Role</option>
-      <option>owner</option><option>admin</option><option>kasir</option><option>mekanik</option>
-    </select>
-    <button class="btn btn-primary" onclick="loadLogLogin()"><i class="ti ti-search"></i> Filter</button>
-    <button class="btn btn-danger btn-sm" onclick="hapusSemuaLog()"><i class="ti ti-trash"></i> Hapus Log</button>
-  </div>
-  <div class="table-wrap">
-    <table><thead><tr>
-      <th>Waktu Login</th><th>Username</th><th>Nama</th><th>Role</th><th>Status</th><th>Aksi</th>
-    </tr></thead>
-    <tbody id="body-log-login">
-      <tr><td colspan="6" class="table-empty"><i class="ti ti-loader"></i> Memuat...</td></tr>
-    </tbody></table>
-  </div>
-  <div id="log-summary" style="margin-top:12px;font-size:12px;color:var(--text3)"></div>`;
-
-  // Set default tanggal 7 hari terakhir
-  const today7=new Date(); today7.setDate(today7.getDate()-7);
-  document.getElementById('log-dari').value=today7.toISOString().slice(0,10);
-  document.getElementById('log-sampai').value=today();
-  await loadLogLogin();
-};
-
-async function loadLogLogin(){
-  const dari=document.getElementById('log-dari')?.value||'';
-  const sampai=document.getElementById('log-sampai')?.value||'';
-  const role=document.getElementById('log-role')?.value||'';
-  showLoading(true);
-  try{
-    let q=sb.from('login_log').select('*').order('waktu_login',{ascending:false}).limit(200);
-    const {data,error}=await q;
-    if(error) throw new Error(error.message);
-    let rows=data||[];
-    // Filter di client
-    if(dari) rows=rows.filter(r=>r.waktu_login>=dari);
-    if(sampai) rows=rows.filter(r=>r.waktu_login<=sampai+'T23:59:59');
-    if(role) rows=rows.filter(r=>r.role===role);
-    const tb=document.getElementById('body-log-login');
-    if(tb) tb.innerHTML=rows.length?rows.map(r=>`<tr>
-      <td style="font-size:12px;white-space:nowrap">${fmtDateTime(r.waktu_login)}</td>
-      <td><code style="color:var(--orange)">${r.username||'-'}</code></td>
-      <td>${r.nama||'-'}</td>
-      <td><span class="badge ${r.role==='owner'?'badge-orange':r.role==='admin'?'badge-brown':'badge-gray'}">${r.role||'-'}</span></td>
-      <td style="font-size:12px;color:var(--green)">${r.keterangan||'Login berhasil'}</td>
-      <td><button class="btn btn-danger btn-xs" onclick="hapusLog('${r.id}')"><i class="ti ti-trash"></i></button></td>
-    </tr>`).join(''):'<tr><td colspan="6" class="table-empty">Tidak ada data log</td></tr>';
-    const sumEl=document.getElementById('log-summary');
-    if(sumEl) sumEl.textContent=`Total: ${rows.length} log login ditampilkan`;
-  }catch(e){
-    const tb=document.getElementById('body-log-login');
-    if(tb) tb.innerHTML=`<tr><td colspan="6" class="table-empty" style="color:var(--red)">Error: ${e.message}<br><small>Pastikan tabel login_log sudah dibuat di Supabase</small></td></tr>`;
-  }
-  showLoading(false);
-}
-
-async function hapusLog(id){
-  if(!await confirm2('Hapus log ini?')) return;
-  showLoading(true);
-  try{
-    await sb.from('login_log').delete().eq('id',id);
-    showToast('Log dihapus');
-    await loadLogLogin();
-  }catch(e){showToast('Gagal: '+e.message,'error');}
-  showLoading(false);
-}
-
-async function hapusSemuaLog(){
-  if(!await confirm2('Hapus SEMUA log login? Data tidak bisa dikembalikan.')) return;
-  showLoading(true);
-  try{
-    // Hapus semua dengan filter id != '0' (workaround untuk delete all)
-    const {data}=await sb.from('login_log').select('id').limit(1000);
-    if(data&&data.length){
-      for(const row of data){
-        await sb.from('login_log').delete().eq('id',row.id);
-      }
-    }
-    showToast('Semua log dihapus');
-    await loadLogLogin();
-  }catch(e){showToast('Gagal: '+e.message,'error');}
-  showLoading(false);
-}
-
-function fmtDateTime(dt){
-  if(!dt) return '-';
-  return new Date(dt).toLocaleString('id-ID',{
-    day:'2-digit',month:'short',year:'numeric',
-    hour:'2-digit',minute:'2-digit',second:'2-digit'
-  });
 }
 
 // ============================================================
