@@ -1546,18 +1546,19 @@ pages['stok']=async()=>{
   const [data,kats]=await Promise.all([loadTbl('barang'),loadKategori()]);
   window._stokData=data;_katList=kats;
   const katOpts=['Semua',...kats].map((k,i)=>`<option value="${i===0?'':k}">${k}</option>`).join('');
-  const isOwner=['owner','admin'].includes((currentUser?.role||'').toLowerCase());
+  const isOwner=(currentUser?.role||'').toLowerCase()==='owner';
+  const canAdd=['owner','admin'].includes((currentUser?.role||'').toLowerCase());
   document.getElementById('content').innerHTML=`
   <div class="page-header">
     <div class="page-title"><i class="ti ti-package"></i> Stok Gudang</div>
-    ${isOwner?'<button class="btn btn-primary" onclick="openBarang()"><i class="ti ti-plus"></i> Tambah Barang</button>':''}
+    ${canAdd?'<button class="btn btn-primary" onclick="openBarang()"><i class="ti ti-plus"></i> Tambah Barang</button>':''}
   </div>
   <div class="search-row">
     <div class="search-input-wrap"><i class="ti ti-search"></i><input class="search-input" id="cari-brg" placeholder="Cari nama / kode..." oninput="filterStok()"/></div>
     <select class="form-input" id="filter-kat" style="width:160px" onchange="filterStok()">${katOpts}</select>
   </div>
-  <div class="table-wrap"><table><thead><tr><th>Kode</th><th>Nama Barang</th><th>Kategori</th><th>Satuan</th><th>Stok</th><th>Min</th><th>Harga Beli</th><th>Harga Jual</th><th>Aksi</th></tr></thead>
-  <tbody id="body-stok">${renderStokRows(data)}</tbody></table></div>`;
+  <div class="table-wrap"><table><thead><tr><th>Kode</th><th>Nama Barang</th><th>Kategori</th><th>Satuan</th><th>Stok</th><th>Min</th><th>Harga Beli</th><th>Harga Jual</th>${isOwner?'<th>Aksi</th>':''}</tr></thead>
+  <tbody id="body-stok">${renderStokRows(data,isOwner)}</tbody></table></div>`;
   ensureBarangModal();
 };
 
@@ -1570,8 +1571,12 @@ async function loadKategori(){
   return ['Oli & Pelumas','Filter','Aki & Listrik','Rem','Kopling','Suspensi','Body','Lainnya'];
 }
 
-function renderStokRows(data){
-  if(!data.length) return '<tr><td colspan="9" class="table-empty"><i class="ti ti-package-off"></i>Belum ada barang</td></tr>';
+function renderStokRows(data, isOwnerFlag){
+  // Cek role jika parameter tidak dikirim
+  const canEdit = isOwnerFlag !== undefined ? isOwnerFlag :
+    (currentUser?.role||'').toLowerCase()==='owner';
+  const colspan = canEdit ? 9 : 8;
+  if(!data.length) return `<tr><td colspan="${colspan}" class="table-empty"><i class="ti ti-package-off"></i>Belum ada barang</td></tr>`;
   return data.map(b=>`<tr>
     <td><code>${b.kode||'-'}</code></td>
     <td style="font-weight:600">${b.nama}</td>
@@ -1581,10 +1586,10 @@ function renderStokRows(data){
     <td style="color:var(--text3)">${fmtNum(b.stok_minimum||0)}</td>
     <td>${fmt(b.harga_beli)}</td>
     <td style="color:var(--orange);font-weight:600">${fmt(b.harga_jual)}</td>
-    <td><div class="table-actions">
+    ${canEdit?`<td><div class="table-actions">
       <button class="btn btn-outline btn-xs" onclick='openBarang(${JSON.stringify(b)})'><i class="ti ti-edit"></i></button>
       <button class="btn btn-danger btn-xs" onclick="delBarang('${b.id}','${b.nama}')"><i class="ti ti-trash"></i></button>
-    </div></td>
+    </div></td>`:''}
   </tr>`).join('');
 }
 
@@ -1595,7 +1600,8 @@ function filterStok(){
     (!q||(b.nama||'').toLowerCase().includes(q)||(b.kode||'').toLowerCase().includes(q))&&
     (!kat||b.kategori===kat)
   );
-  document.getElementById('body-stok').innerHTML=renderStokRows(f);
+  const isOwner=(currentUser?.role||'').toLowerCase()==='owner';
+  document.getElementById('body-stok').innerHTML=renderStokRows(f, isOwner);
 }
 
 function ensureBarangModal(){
