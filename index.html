@@ -14,15 +14,15 @@
   --bg:#f5f0eb;--bg2:#fff;--bg3:#fdf6ee;--sidebar:#1a0f00;
   --orange:#c2570a;--orange2:#e06d1a;--orange-dim:rgba(194,87,10,.12);
   --brown:#5c3317;--brown2:#3d2009;
-  --text:#1a0f00;--text2:#5c3317;--text3:#00101d;
+  --text:#000000;--text2:#000000;--text3:#000000;
   --border:#e8d8c4;--border2:#d4b896;
   --green:#2d7a3a;--red:#c0392b;--blue:#1a5c99;--yellow:#b8860b;
   --input-bg:#fffaf5;
   --shadow:0 2px 12px rgba(92,51,23,.10);
   --shadow2:0 4px 24px rgba(92,51,23,.16);
   --radius:10px;--radius2:14px;
-  --font-display: 'Poppins', sans-serif;
-  --font-body: 'Poppins', sans-serif;
+  --font-display: 'Poppins', Poppins;
+  --font-body: 'Poppins', Poppins;
   --sidebar-w:230px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -305,31 +305,116 @@ code{font-family:monospace;background:var(--bg3);padding:1px 6px;border-radius:4
 .login-logo-icon i{font-size:32px;color:#fff;}
 .login-title{font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--text);}
 .login-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+
+/* ── NEON LOGIN STYLE ────────────────────────────────────────────── */
+#login-page{background-color:#05070b!important;font-family:'Courier New',Courier,monospace;perspective:1000px;}
+.light-fixture{position:absolute;top:0;display:flex;justify-content:center;width:100%;z-index:10;}
+.tube{width:280px;height:6px;background:#f3faff;border-radius:0 0 4px 4px;
+  box-shadow:0 2px 10px #fff,0 4px 25px #00f0ff,0 10px 50px #0066cc;
+  animation:neon-flicker 4s infinite alternate;}
+.bracket{width:12px;height:10px;background:#222;border-bottom:2px solid #444;}
+.bracket.left{border-radius:0 0 0 4px;}
+.bracket.right{border-radius:0 0 4px 0;}
+.light-beam{position:absolute;top:6px;width:450px;height:600px;
+  background:linear-gradient(to bottom,rgba(0,240,255,.12) 0%,rgba(0,102,204,.03) 50%,rgba(0,0,0,0) 100%);
+  clip-path:polygon(30% 0%,70% 0%,100% 100%,0% 100%);
+  pointer-events:none;animation:beam-pulse 4s infinite alternate;}
+.login-container-neon{z-index:5;transform:rotateX(5deg);transition:transform .5s ease;}
+.login-container-neon:hover{transform:rotateX(0deg) scale(1.02);}
+.login-form-neon{background:rgba(10,15,26,.85);padding:50px 40px;border-radius:16px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(0,240,255,.15);
+  box-shadow:0 -4px 30px rgba(0,240,255,.2),0 20px 50px rgba(0,0,0,.9);width:380px;}
+.login-form-neon h2{color:#fff;font-size:1.6rem;letter-spacing:2px;margin-bottom:4px;
+  text-transform:uppercase;text-shadow:0 0 10px rgba(255,255,255,.2);}
+.login-form-neon .neon-sub{color:#6272a4;font-size:.78rem;margin-bottom:28px;letter-spacing:1px;}
+.neon-input-group{position:relative;margin-bottom:28px;}
+.neon-input-group input{width:100%;padding:12px 10px 10px 5px;background:transparent;
+  border:none;border-bottom:1px solid rgba(255,255,255,.2);
+  color:#fff;font-size:1rem;outline:none;transition:border-color .3s ease;
+  font-family:'Courier New',Courier,monospace;}
+.neon-input-group label{position:absolute;top:12px;left:5px;color:#6272a4;
+  pointer-events:none;transition:.3s ease all;font-size:.9rem;}
+.neon-input-bar{position:relative;display:block;width:100%;}
+.neon-input-bar::before{content:'';height:2px;width:0;bottom:0;position:absolute;
+  background:#00f0ff;box-shadow:0 0 10px #00f0ff;transition:.4s ease all;left:50%;}
+.neon-input-group input:focus~label,
+.neon-input-group input:not(:placeholder-shown)~label{
+  top:-15px;font-size:.75rem;color:#00f0ff;letter-spacing:1px;}
+.neon-input-group input:focus~.neon-input-bar::before{width:100%;left:0;}
+.neon-input-group input:focus{border-bottom-color:transparent;}
+.neon-submit-btn{width:100%;padding:14px;background:transparent;
+  border:1px solid #00f0ff;border-radius:4px;color:#00f0ff;
+  font-family:'Courier New',Courier,monospace;font-weight:bold;
+  font-size:.9rem;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;position:relative;overflow:hidden;transition:all .4s ease;margin-top:8px;}
+.neon-submit-btn:hover{background:#00f0ff;color:#000;box-shadow:0 0 30px #00f0ff;}
+.neon-notification{max-height:0;opacity:0;transform:translateY(-10px);
+  transition:all .4s cubic-bezier(.175,.885,.32,1.275);
+  border-radius:6px;font-size:.78rem;letter-spacing:1px;margin-bottom:0;
+  display:flex;align-items:center;justify-content:center;border:1px solid transparent;}
+.neon-notification.show-success{max-height:50px;opacity:1;transform:translateY(0);
+  padding:10px 14px;margin-bottom:20px;background:rgba(57,255,20,.08);
+  border-color:#39ff14;color:#39ff14;box-shadow:0 0 15px rgba(57,255,20,.2);}
+.neon-notification.show-failed{max-height:60px;opacity:1;transform:translateY(0);
+  padding:10px 14px;margin-bottom:20px;background:rgba(255,49,49,.08);
+  border-color:#ff3131;color:#ff3131;box-shadow:0 0 15px rgba(255,49,49,.2);}
+.neon-submit-btn.loading{color:transparent;pointer-events:none;}
+.neon-submit-btn.loading::after{content:"";position:absolute;width:20px;height:20px;
+  top:50%;left:50%;margin-top:-10px;margin-left:-10px;
+  border:2px solid transparent;border-top-color:#00f0ff;
+  border-radius:50%;animation:neon-spin .8s linear infinite;}
+@keyframes neon-flicker{
+  0%,19%,21%,23%,25%,54%,56%,100%{opacity:1;box-shadow:0 2px 10px #fff,0 4px 25px #00f0ff,0 10px 50px #0066cc;}
+  20%,24%,55%{opacity:.6;box-shadow:0 2px 5px #fff,0 4px 10px #0066cc;}}
+@keyframes beam-pulse{
+  0%,19%,21%,23%,25%,54%,56%,100%{opacity:1;}
+  20%,24%,55%{opacity:.4;}}
+@keyframes neon-spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
 <!-- LOGIN PAGE -->
 <div id="login-page" class="show">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="login-logo-icon"><i class="ti ti-tool"></i></div>
-      <div class="login-title">WAS GARAGE</div>
-      <div class="login-sub">by.Jefmanado 2026 — Sistem Operasional Bengkel</div>
-    </div>
+  <!-- Lampu neon atas -->
+  <div class="light-fixture">
+    <div class="bracket left"></div>
+    <div class="tube"></div>
+    <div class="bracket right"></div>
+    <div class="light-beam"></div>
+  </div>
 
-    <div class="form-group" style="margin-bottom:12px">
-      <label class="form-label">Username</label>
-      <input id="login-user" class="form-input" placeholder="Masukkan username..." onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
-    <div class="form-group" style="margin-bottom:16px">
-      <label class="form-label">Password</label>
-      <input id="login-pass" class="form-input" type="password" placeholder="Masukkan password..." onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="doLogin()">
-      <i class="ti ti-login"></i> Masuk
-    </button>
-    <div id="login-err" style="color:var(--red);font-size:12px;text-align:center;margin-top:10px;display:none"></div>
+  <div class="login-container-neon">
+    <form class="login-form-neon" onsubmit="event.preventDefault();doLogin()">
+      <h2>WAS GARAGE</h2>
+      <p class="neon-sub">by.Jefmanado 2026 &mdash; Sistem Operasional Bengkel</p>
 
+      <!-- Notifikasi status -->
+      <div class="neon-notification" id="login-notif">
+        <span class="notif-text"></span>
+      </div>
+
+      <!-- Username -->
+      <div class="neon-input-group">
+        <input type="text" id="login-user" required placeholder=" " onkeydown="if(event.key==='Enter')doLogin()"/>
+        <label for="login-user">Username</label>
+        <div class="neon-input-bar"></div>
+      </div>
+
+      <!-- Password -->
+      <div class="neon-input-group">
+        <input type="password" id="login-pass" required placeholder=" " onkeydown="if(event.key==='Enter')doLogin()"/>
+        <label for="login-pass">Password</label>
+        <div class="neon-input-bar"></div>
+      </div>
+
+      <!-- Error hidden (kompatibilitas) -->
+      <div id="login-err" style="display:none"></div>
+
+      <button type="button" class="neon-submit-btn" id="neon-submit-btn" onclick="doLogin()">
+        Initialize Session
+      </button>
+    </form>
   </div>
 </div>
 
@@ -826,6 +911,12 @@ async function doLogin(){
     return;
   }
 
+  // Neon: loading state
+  const neonBtn=document.getElementById('neon-submit-btn');
+  if(neonBtn) neonBtn.classList.add('loading');
+  const loginNotif=document.getElementById('login-notif');
+  if(loginNotif) loginNotif.classList.remove('show-success','show-failed');
+
   showLoading(true);
   try{
     // Query semua user dulu, filter manual di client (hindari masalah RLS/filter)
@@ -864,8 +955,17 @@ async function doLogin(){
     if(!match){showLoginErr('Password salah.');showLoading(false);return;}
     currentUser=data;
     localStorage.setItem('wg_user',JSON.stringify({id:data.id,username:data.username,nama:data.nama,role:data.role}));
-    // Catat log login ke Supabase
-    await catatLoginLog(data);
+    // Tampilkan success neon sebentar
+    const notifOk=document.getElementById('login-notif');
+    if(notifOk){
+      const txtOk=notifOk.querySelector('.notif-text');
+      if(txtOk) txtOk.textContent='ACCESS GRANTED. DEPLOYING SESSION...';
+      notifOk.classList.remove('show-success','show-failed');
+      notifOk.classList.add('show-success');
+    }
+    const nBtnOk=document.getElementById('neon-submit-btn');
+    if(nBtnOk) nBtnOk.classList.remove('loading');
+    await new Promise(r=>setTimeout(r,900));
     startApp();
   }catch(e){
     console.error('Login error:',e);
@@ -879,27 +979,9 @@ async function doLogin(){
       showLoginErr('Gagal terhubung ke server: '+e.message);
     }
   }
+  const nBtnEnd=document.getElementById('neon-submit-btn');
+  if(nBtnEnd) nBtnEnd.classList.remove('loading');
   showLoading(false);
-}
-
-// ============================================================
-// LOG LOGIN
-// ============================================================
-async function catatLoginLog(user){
-  if(!isOnline) return; // hanya catat jika online
-  try{
-    await sb.from('login_log').insert({
-      id: uid(),
-      user_id: user.id||null,
-      username: user.username||'',
-      nama: user.nama||'',
-      role: user.role||'',
-      waktu_login: new Date().toISOString(),
-      keterangan: 'Login berhasil'
-    });
-  }catch(e){
-    console.warn('Gagal catat log login:', e.message);
-  }
 }
 
 async function hashPwd(pwd){
@@ -909,7 +991,18 @@ async function hashPwd(pwd){
 
 function showLoginErr(msg){
   const el=document.getElementById('login-err');
-  el.textContent=msg;el.style.display='block';
+  if(el){el.textContent=msg;}
+  // Tampilkan di neon notification
+  const notif=document.getElementById('login-notif');
+  if(notif){
+    const txt=notif.querySelector('.notif-text');
+    if(txt) txt.textContent='ERR: '+msg.toUpperCase();
+    notif.classList.remove('show-success','show-failed');
+    void notif.offsetWidth;
+    notif.classList.add('show-failed');
+  }
+  const btn=document.getElementById('neon-submit-btn');
+  if(btn) btn.classList.remove('loading');
 }
 
 function doLogout(){
@@ -1546,19 +1639,18 @@ pages['stok']=async()=>{
   const [data,kats]=await Promise.all([loadTbl('barang'),loadKategori()]);
   window._stokData=data;_katList=kats;
   const katOpts=['Semua',...kats].map((k,i)=>`<option value="${i===0?'':k}">${k}</option>`).join('');
-  const isOwner=(currentUser?.role||'').toLowerCase()==='owner';
-  const canAdd=['owner','admin'].includes((currentUser?.role||'').toLowerCase());
+  const isOwner=['owner','admin'].includes((currentUser?.role||'').toLowerCase());
   document.getElementById('content').innerHTML=`
   <div class="page-header">
     <div class="page-title"><i class="ti ti-package"></i> Stok Gudang</div>
-    ${canAdd?'<button class="btn btn-primary" onclick="openBarang()"><i class="ti ti-plus"></i> Tambah Barang</button>':''}
+    ${isOwner?'<button class="btn btn-primary" onclick="openBarang()"><i class="ti ti-plus"></i> Tambah Barang</button>':''}
   </div>
   <div class="search-row">
     <div class="search-input-wrap"><i class="ti ti-search"></i><input class="search-input" id="cari-brg" placeholder="Cari nama / kode..." oninput="filterStok()"/></div>
     <select class="form-input" id="filter-kat" style="width:160px" onchange="filterStok()">${katOpts}</select>
   </div>
-  <div class="table-wrap"><table><thead><tr><th>Kode</th><th>Nama Barang</th><th>Kategori</th><th>Satuan</th><th>Stok</th><th>Min</th><th>Harga Beli</th><th>Harga Jual</th>${isOwner?'<th>Aksi</th>':''}</tr></thead>
-  <tbody id="body-stok">${renderStokRows(data,isOwner)}</tbody></table></div>`;
+  <div class="table-wrap"><table><thead><tr><th>Kode</th><th>Nama Barang</th><th>Kategori</th><th>Satuan</th><th>Stok</th><th>Min</th><th>Harga Beli</th><th>Harga Jual</th><th>Aksi</th></tr></thead>
+  <tbody id="body-stok">${renderStokRows(data)}</tbody></table></div>`;
   ensureBarangModal();
 };
 
@@ -1571,12 +1663,8 @@ async function loadKategori(){
   return ['Oli & Pelumas','Filter','Aki & Listrik','Rem','Kopling','Suspensi','Body','Lainnya'];
 }
 
-function renderStokRows(data, isOwnerFlag){
-  // Cek role jika parameter tidak dikirim
-  const canEdit = isOwnerFlag !== undefined ? isOwnerFlag :
-    (currentUser?.role||'').toLowerCase()==='owner';
-  const colspan = canEdit ? 9 : 8;
-  if(!data.length) return `<tr><td colspan="${colspan}" class="table-empty"><i class="ti ti-package-off"></i>Belum ada barang</td></tr>`;
+function renderStokRows(data){
+  if(!data.length) return '<tr><td colspan="9" class="table-empty"><i class="ti ti-package-off"></i>Belum ada barang</td></tr>';
   return data.map(b=>`<tr>
     <td><code>${b.kode||'-'}</code></td>
     <td style="font-weight:600">${b.nama}</td>
@@ -1586,10 +1674,10 @@ function renderStokRows(data, isOwnerFlag){
     <td style="color:var(--text3)">${fmtNum(b.stok_minimum||0)}</td>
     <td>${fmt(b.harga_beli)}</td>
     <td style="color:var(--orange);font-weight:600">${fmt(b.harga_jual)}</td>
-    ${canEdit?`<td><div class="table-actions">
+    <td><div class="table-actions">
       <button class="btn btn-outline btn-xs" onclick='openBarang(${JSON.stringify(b)})'><i class="ti ti-edit"></i></button>
       <button class="btn btn-danger btn-xs" onclick="delBarang('${b.id}','${b.nama}')"><i class="ti ti-trash"></i></button>
-    </div></td>`:''}
+    </div></td>
   </tr>`).join('');
 }
 
@@ -1600,8 +1688,7 @@ function filterStok(){
     (!q||(b.nama||'').toLowerCase().includes(q)||(b.kode||'').toLowerCase().includes(q))&&
     (!kat||b.kategori===kat)
   );
-  const isOwner=(currentUser?.role||'').toLowerCase()==='owner';
-  document.getElementById('body-stok').innerHTML=renderStokRows(f, isOwner);
+  document.getElementById('body-stok').innerHTML=renderStokRows(f);
 }
 
 function ensureBarangModal(){
@@ -1618,7 +1705,7 @@ function ensureBarangModal(){
           <select id="f-brg-kat" class="form-input">${katOpts}</select>
         </div>
         <div class="form-group"><label class="form-label">Satuan</label>
-          <select id="f-brg-sat" class="form-input"><option>pcs</option><option>liter</option><option>set</option><option>pasang</option><option>meter</option><option>kg</option><option>gram</option><option>unit</option><option>assy</option><option>only</option></select>
+          <select id="f-brg-sat" class="form-input"><option>pcs</option><option>liter</option><option>set</option><option>pasang</option><option>meter</option><option>kg</option><option>gram</option><option>unit</option></select>
         </div>
         <div class="form-group"><label class="form-label">Harga Beli</label><input id="f-brg-hb" class="form-input" type="number" min="0"/></div>
         <div class="form-group"><label class="form-label">Harga Jual <span class="req">*</span></label><input id="f-brg-hj" class="form-input" type="number" min="0"/></div>
