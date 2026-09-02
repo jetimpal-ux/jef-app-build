@@ -725,7 +725,7 @@ const sb={
 // Username tetap dipakai di layar login, tapi Supabase Auth butuh format
 // email, jadi kita mapping otomatis: "budi" -> "budi@wasgarage.internal"
 // Email ini TIDAK perlu bisa menerima surat, hanya dipakai sebagai ID login.
-const AUTH_EMAIL_DOMAIN = 'gmail.com';
+const AUTH_EMAIL_DOMAIN = 'wasgarage.internal';
 let authSession = null; // {access_token, refresh_token, expires_at, user}
 
 function usernameToEmail(username){
