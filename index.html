@@ -39,9 +39,28 @@ input,select,textarea{font-family:var(--font-body);}
 
 /* ── LAYOUT ── */
 #app{display:flex;height:100vh;overflow:hidden;}
-#sidebar{width:var(--sidebar-w);background:var(--sidebar);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;transition:width .2s;}
-#sidebar.collapsed{width:56px;}
+#sidebar{display:none!important;}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── TOP NAVBAR (pengganti sidebar) ───────────────────────── */
+#topnav-header{background:var(--sidebar);display:flex;align-items:center;gap:10px;padding:10px 20px;flex-shrink:0;}
+#topnav-header .sb-logo-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#topnav-header .sb-logo-text{color:#fff;font-family:var(--font-display);font-weight:800;font-size:16px;letter-spacing:.3px;}
+#topnav-header .sb-logo-sub{color:rgba(255,255,255,.4);font-size:10px;}
+#topnav-user{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#topnav-user .sb-user-name{color:#fff;font-size:12px;font-weight:600;}
+#topnav-user .sb-user-role{color:rgba(255,255,255,.5);font-size:10px;text-transform:uppercase;}
+#topnav-bar{background:var(--primary);display:flex;align-items:stretch;overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+#topnav-bar::-webkit-scrollbar{display:none;}
+.topnav-btn{display:flex;align-items:center;gap:6px;padding:11px 16px;color:rgba(255,255,255,.85);font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;font-family:var(--font-body);}
+.topnav-btn i{font-size:15px;}
+.topnav-btn:hover{background:rgba(0,0,0,.1);color:#fff;}
+.topnav-btn.active{background:rgba(0,0,0,.18);color:#fff;border-bottom-color:#fff;}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+.cat-tile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:22px 16px;text-align:center;cursor:pointer;transition:all .15s;box-shadow:var(--shadow);}
+.cat-tile:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow2);}
+.cat-tile i{font-size:30px;color:var(--primary);display:block;margin-bottom:10px;}
+.cat-tile-label{font-size:13px;font-weight:700;color:var(--text);font-family:var(--font-display);}
 #topbar{height:56px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 16px;flex-shrink:0;box-shadow:var(--shadow);}
 #content{flex:1;overflow-y:auto;padding:20px;}
 
@@ -283,9 +302,17 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
   #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199;}
   #sidebar-overlay.show{display:block;}
 
+  /* Topnav (bar menu atas) */
+  #topnav-header{padding:8px 12px;}
+  #topnav-header .sb-logo-sub{display:none;}
+  #topnav-user .sb-user-role{display:none;}
+  .topnav-btn{padding:9px 12px;font-size:11px;}
+  .topnav-btn span{display:none;}
+  .topnav-btn i{font-size:18px;}
+
   /* Topbar */
   #topbar{padding:0 10px;gap:6px;}
-  #btn-menu{display:flex!important;}
+  /* btn-menu sudah tidak dipakai -- navigasi sekarang lewat bar menu atas */
   #topbar-title{font-size:14px;}
   .topbar-badge span{display:none;}
 
@@ -589,34 +616,39 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
 <!-- MAIN APP -->
 <div id="app" style="display:none">
   <!-- SIDEBAR -->
+  <!-- (sidebar lama dihapus dari tampilan, navigasi sekarang di bar menu atas) -->
   <div id="sidebar">
-    <div class="sb-logo">
-      <div class="sb-logo-icon" style="background:var(--primary)"><i class="ti ti-tool" style="color:#fff;font-size:18px"></i></div>
-      <div>
-        <div class="sb-logo-text">Jef-app-build</div>
-        <div class="sb-logo-sub">Je.V.3.26 - Ora et Labora</div>
-      </div>
-    </div>
     <nav id="nav"></nav>
-    <div class="sb-user">
-      <div class="sb-user-av" id="sb-av">O</div>
-      <div class="sb-user-info">
-        <div class="sb-user-name" id="sb-name">Owner</div>
-        <div class="sb-user-role" id="sb-role">Owner</div>
-      </div>
-      <button class="topbar-btn" style="background:transparent;border:none;color:rgba(255,255,255,.4)" onclick="doLogout()" title="Logout"><i class="ti ti-logout"></i></button>
-    </div>
+    <div id="sb-av" style="display:none"></div>
+    <div id="sb-name" style="display:none"></div>
+    <div id="sb-role" style="display:none"></div>
   </div>
 
   <!-- MAIN -->
   <div id="main">
+    <!-- ── TOP NAVBAR (pengganti sidebar) ──────────────────── -->
+    <div id="topnav-header">
+      <div class="sb-logo-icon" style="background:var(--primary)"><i class="ti ti-tool" style="color:#fff;font-size:16px"></i></div>
+      <div>
+        <div class="sb-logo-text">Jef-app-build</div>
+        <div class="sb-logo-sub">Je.V.3.26 - Ora et Labora</div>
+      </div>
+      <div id="topnav-user">
+        <div style="text-align:right">
+          <div class="sb-user-name" id="tn-name">Owner</div>
+          <div class="sb-user-role" id="tn-role">Owner</div>
+        </div>
+        <button class="topbar-btn" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="doLogout()" title="Logout"><i class="ti ti-logout"></i></button>
+      </div>
+    </div>
+    <div id="topnav-bar"></div>
+
     <div id="offline-bar">
       <i class="ti ti-wifi-off"></i>
       <span>Mode Offline — data tersimpan lokal, sync otomatis saat online</span>
       <span id="pending-count" style="background:rgba(255,255,255,.2);padding:2px 8px;border-radius:10px;margin-left:auto;font-size:11px"></span>
     </div>
     <div id="topbar">
-      <button class="topbar-btn" onclick="toggleSidebar()" style="display:none" id="btn-menu"><i class="ti ti-menu-2"></i></button>
       <div id="topbar-title">Dashboard</div>
       <div class="topbar-badge" id="badge-online">
         <div class="dot-online" id="dot-status"></div>
@@ -1341,26 +1373,68 @@ function canAccess(page){
 
 let currentPage='';
 
-function buildNav(){
-  const nav=document.getElementById('nav');
-  let lastGroup=null, html='';
+// Ikon default per grup, dipakai di tombol bar menu atas & halaman kategori
+const GROUP_ICONS={
+  MASTER:'ti-database', GUDANG:'ti-package', PEMBELIAN:'ti-shopping-cart',
+  PENJUALAN:'ti-receipt', SERVICE:'ti-engine', PENGELUARAN:'ti-wallet',
+  LAPORAN:'ti-chart-bar', SISTEM:'ti-settings'
+};
+
+function getAccessibleGroups(){
+  const groups=[];
   for(const p of PAGES){
-    if(!canAccess(p)) continue; // sembunyikan menu tidak punya akses
-    if(p.group!==lastGroup){
-      if(p.group) html+=`<div class="nav-group-label">${p.group}</div>`;
-      lastGroup=p.group;
-    }
-    html+=`<div class="nav-item" id="nav-${p.id}" onclick="showPage('${p.id}')">
-      <i class="ti ${p.icon}"></i>
-      <span class="nav-label">${p.label}</span>
-    </div>`;
+    if(!p.group) continue;
+    if(!canAccess(p)) continue;
+    if(!groups.includes(p.group)) groups.push(p.group);
   }
-  nav.innerHTML=html;
+  return groups;
 }
 
-function setActiveNav(id){
-  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-  const el=document.getElementById(`nav-${id}`);
+function buildTopNav(){
+  const bar=document.getElementById('topnav-bar');
+  const groups=getAccessibleGroups();
+  let html=`<div class="topnav-btn" id="topnav-dashboard" onclick="showPage('dashboard')">
+    <i class="ti ti-layout-dashboard"></i><span>Home</span>
+  </div>`;
+  for(const g of groups){
+    html+=`<div class="topnav-btn" id="topnav-grp-${g}" onclick="showPage('cat_${g}')">
+      <i class="ti ${GROUP_ICONS[g]||'ti-folder'}"></i><span>${g}</span>
+    </div>`;
+  }
+  bar.innerHTML=html;
+
+  // Daftarkan halaman kategori untuk tiap grup (kalau belum terdaftar)
+  for(const g of groups){
+    const pageId='cat_'+g;
+    if(pages[pageId]) continue;
+    pages[pageId]=async()=>{
+      const items=PAGES.filter(p=>p.group===g&&canAccess(p));
+      document.getElementById('content').innerHTML=`
+        <div style="margin-bottom:14px;font-size:13px;color:var(--text3)">
+          Pilih salah satu menu di bawah ini:
+        </div>
+        <div class="cat-grid">
+          ${items.map(p=>`
+            <div class="cat-tile" onclick="showPage('${p.id}')">
+              <i class="ti ${p.icon}"></i>
+              <div class="cat-tile-label">${p.label}</div>
+            </div>
+          `).join('')}
+        </div>`;
+    };
+  }
+}
+
+function setActiveTopNav(id){
+  document.querySelectorAll('.topnav-btn').forEach(el=>el.classList.remove('active'));
+  let targetId='topnav-dashboard';
+  if(id.startsWith('cat_')){
+    targetId='topnav-grp-'+id.replace('cat_','');
+  }else{
+    const p=PAGES.find(x=>x.id===id);
+    if(p&&p.group) targetId='topnav-grp-'+p.group;
+  }
+  const el=document.getElementById(targetId);
   if(el) el.classList.add('active');
 }
 
@@ -1384,8 +1458,8 @@ async function showPage(id,force=false){
     return;
   }
   currentPage=id;
-  setActiveNav(id);
-  document.getElementById('topbar-title').textContent=p?.label||id;
+  setActiveTopNav(id);
+  document.getElementById('topbar-title').textContent=p?.label||(id.startsWith('cat_')?id.replace('cat_',''):id);
   document.getElementById('content').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:200px"><div class="spinner"></div></div>';
   try{
     await pages[id]?.();
@@ -5260,11 +5334,10 @@ async function doRestore(){
 async function startApp(){
   document.getElementById('login-page').classList.remove('show');
   document.getElementById('app').style.display='flex';
-  // Set user info di sidebar
-  document.getElementById('sb-name').textContent=currentUser.nama||currentUser.username;
-  document.getElementById('sb-role').textContent=currentUser.role||'User';
-  document.getElementById('sb-av').textContent=(currentUser.nama||currentUser.username||'U')[0].toUpperCase();
-  buildNav();
+  // Set user info di bar menu atas
+  document.getElementById('tn-name').textContent=currentUser.nama||currentUser.username;
+  document.getElementById('tn-role').textContent=currentUser.role||'User';
+  buildTopNav();
   updateLayout();
   updateOnlineStatus();
   await updatePendingBadge();
@@ -5345,27 +5418,13 @@ async function cacheShell(){
 // MOBILE MENU
 // ============================================================
 function updateLayout(){
-  const isMobile=window.innerWidth<=768;
-  const btn=document.getElementById('btn-menu');
-  if(btn) btn.style.display=isMobile?'flex':'none';
-  if(!isMobile){
-    document.getElementById('sidebar')?.classList.remove('mobile-open');
-    document.getElementById('sidebar-overlay')?.classList.remove('show');
-    document.body.style.overflow='';
-  }
+  // Navigasi sekarang lewat bar menu atas -- tidak perlu lagi urus
+  // buka/tutup sidebar mobile. Fungsi ini sengaja dibiarkan kosong
+  // (dipertahankan supaya pemanggilan resize listener tidak error).
 }
 window.addEventListener('resize', updateLayout);
 
-// Tutup sidebar mobile saat klik nav item
-document.addEventListener('click',e=>{
-  if(window.innerWidth<=768){
-    const sb=document.getElementById('sidebar');
-    const btn=document.getElementById('btn-menu');
-    if(sb&&!sb.contains(e.target)&&btn&&!btn.contains(e.target)){
-      sb.classList.remove('mobile-open');
-    }
-  }
-});
+// (logika tutup sidebar mobile lama sudah tidak relevan, dihapus)
 
 // ============================================================
 // RESET PASSWORD (dari link email "Send password recovery")
