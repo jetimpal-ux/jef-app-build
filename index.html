@@ -61,6 +61,8 @@ input,select,textarea{font-family:var(--font-body);}
 .cat-tile:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow2);}
 .cat-tile i{font-size:30px;color:var(--primary);display:block;margin-bottom:10px;}
 .cat-tile-label{font-size:13px;font-weight:700;color:var(--text);font-family:var(--font-display);}
+/* Efek miring 3D ringan (diatur lewat JS saat kursor bergerak di atas kartu) */
+.stat-card,.cat-tile{transition:transform .12s ease-out,box-shadow .15s,border-color .15s;will-change:transform;}
 #topbar{height:56px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 16px;flex-shrink:0;box-shadow:var(--shadow);}
 #content{flex:1;overflow-y:auto;padding:20px;}
 
@@ -530,7 +532,8 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
   <div class="garage-login-wrap">
     <!-- Logo & Brand -->
     <div class="garage-login-brand">
-      <div class="garage-login-icon">
+      <div id="login-3d" style="display:none;width:280px;height:160px;margin:0 auto 4px;cursor:grab;touch-action:pan-y"></div>
+      <div class="garage-login-icon" id="login-icon-fallback">
         <i class="ti ti-tool"></i>
       </div>
       <div class="garage-login-title">JEF-APP-BUILD</div>
@@ -705,6 +708,7 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
 // URL & Key diambil dari server via /api/config (lebih aman)
 let SUPABASE_URL = 'https://bscoyiwjaztliyjkrhmx.supabase.co';
 let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzY295aXdqYXp0bGl5amtyaG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzAxNTYsImV4cCI6MjA5NjM0NjE1Nn0.3Nu6_BtGCXU1EUIKAaeWXRgDToXKW8oHGadO4BwwFUs';
+
 
 async function loadConfig(){
   try{
@@ -1335,6 +1339,7 @@ async function doLogout(){
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-err').style.display='none';
+  initLogin3D();
 }
 
 // ============================================================
@@ -5332,6 +5337,7 @@ async function doRestore(){
 // INIT APP
 // ============================================================
 async function startApp(){
+  stopLogin3D();
   document.getElementById('login-page').classList.remove('show');
   document.getElementById('app').style.display='flex';
   // Set user info di bar menu atas
@@ -5425,6 +5431,137 @@ function updateLayout(){
 window.addEventListener('resize', updateLayout);
 
 // (logika tutup sidebar mobile lama sudah tidak relevan, dihapus)
+
+// ============================================================
+// 3D — MOBIL DI HALAMAN LOGIN + EFEK MIRING KARTU
+// ============================================================
+// Three.js dimuat HANYA saat halaman login tampil dan perangkat online.
+// Kalau gagal dimuat / WebGL tidak didukung / hemat gerak aktif, tampilan
+// otomatis kembali ke ikon biasa -- login tetap normal.
+let _l3d=null;
+
+function loadThreeJS(){
+  return new Promise((res,rej)=>{
+    if(window.THREE) return res();
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+function buildCar3D(THREE){
+  const car=new THREE.Group();
+  const mat=(c,m,r,extra)=>new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:m,roughness:r},extra||{}));
+  const red=mat(0xd32f2f,.55,.35), dark=mat(0x1c1c1e,.3,.6),
+        glass=mat(0x9ec9ff,.2,.1,{transparent:true,opacity:.85}),
+        chrome=mat(0xcfd2d6,.9,.25);
+  const box=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);car.add(o);return o;};
+  box(2.7,.5,1.2,red,0,.55,0);            // bodi bawah
+  box(1.35,.5,1.08,glass,-.15,1.03,0);    // kabin kaca
+  box(1.2,.06,1.0,red,-.15,1.31,0);       // atap
+  box(.5,.18,1.1,red,.95,.86,0);          // kap mesin
+  box(.1,.2,1.0,dark,1.36,.5,0);          // bumper depan
+  box(.1,.2,1.0,dark,-1.36,.5,0);         // bumper belakang
+  box(.06,.12,.28,mat(0xfff3b0,0,.2,{emissive:0xffe680,emissiveIntensity:.9}),1.38,.66,.38);
+  box(.06,.12,.28,mat(0xfff3b0,0,.2,{emissive:0xffe680,emissiveIntensity:.9}),1.38,.66,-.38);
+  box(.06,.1,.28,mat(0xff3b30,0,.3,{emissive:0xff1a1a,emissiveIntensity:.8}),-1.38,.66,.38);
+  box(.06,.1,.28,mat(0xff3b30,0,.3,{emissive:0xff1a1a,emissiveIntensity:.8}),-1.38,.66,-.38);
+  const wheelGeo=new THREE.CylinderGeometry(.36,.36,.26,24), hubGeo=new THREE.CylinderGeometry(.18,.18,.28,12);
+  [[.88,.62],[.88,-.62],[-.88,.62],[-.88,-.62]].forEach(([x,z])=>{
+    const w=new THREE.Mesh(wheelGeo,dark); w.rotation.x=Math.PI/2; w.position.set(x,.36,z); car.add(w);
+    const h=new THREE.Mesh(hubGeo,chrome); h.rotation.x=Math.PI/2; h.position.set(x,.36,z*1.01); car.add(h);
+  });
+  return car;
+}
+
+async function initLogin3D(){
+  if(_l3d) return;
+  const box=document.getElementById('login-3d');
+  if(!box) return;
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(!navigator.onLine) return;
+  try{ await loadThreeJS(); }catch(e){ return; }
+  const lp=document.getElementById('login-page');
+  if(!lp||!lp.classList.contains('show')) return;
+  try{
+    const THREE=window.THREE;
+    const W=box.clientWidth||280, H=160;
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.setSize(W,H);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(32,W/H,.1,50);
+    camera.position.set(4.2,2.4,4.8); camera.lookAt(0,.6,0);
+    scene.add(new THREE.AmbientLight(0xffffff,.65));
+    const d=new THREE.DirectionalLight(0xffffff,.9); d.position.set(4,6,3); scene.add(d);
+    const p=new THREE.PointLight(0xd32f2f,.6,12); p.position.set(-3,2,-2); scene.add(p);
+    const car=buildCar3D(THREE); scene.add(car);
+    const floor=new THREE.Mesh(new THREE.CylinderGeometry(2.3,2.3,.05,48),new THREE.MeshStandardMaterial({color:0x2a2a2e,metalness:.4,roughness:.6}));
+    floor.position.y=-.03; scene.add(floor);
+    box.innerHTML=''; box.appendChild(renderer.domElement);
+    box.style.display='block';
+    const ic=document.getElementById('login-icon-fallback'); if(ic) ic.style.display='none';
+
+    let dragging=false,lastX=0,raf=0;
+    const down=e=>{dragging=true;lastX=e.clientX;box.style.cursor='grabbing';};
+    const move=e=>{if(!dragging)return;car.rotation.y+=(e.clientX-lastX)*.012;lastX=e.clientX;};
+    const up=()=>{dragging=false;box.style.cursor='grab';};
+    box.addEventListener('pointerdown',down);
+    window.addEventListener('pointermove',move);
+    window.addEventListener('pointerup',up);
+
+    const loop=()=>{
+      const l=document.getElementById('login-page');
+      if(!l||!l.classList.contains('show')){stopLogin3D();return;}
+      if(!dragging) car.rotation.y+=.008;
+      renderer.render(scene,camera);
+      raf=requestAnimationFrame(loop);
+    };
+    _l3d={renderer,box,down,move,up,stop:()=>cancelAnimationFrame(raf)};
+    loop();
+  }catch(e){
+    console.warn('[3D] tidak dapat dijalankan, memakai ikon biasa:',e);
+    box.style.display='none';
+    const ic=document.getElementById('login-icon-fallback'); if(ic) ic.style.display='';
+    _l3d=null;
+  }
+}
+
+function stopLogin3D(){
+  if(!_l3d) return;
+  try{
+    _l3d.stop();
+    _l3d.box.removeEventListener('pointerdown',_l3d.down);
+    window.removeEventListener('pointermove',_l3d.move);
+    window.removeEventListener('pointerup',_l3d.up);
+    _l3d.renderer.dispose();
+    _l3d.box.innerHTML=''; _l3d.box.style.display='none';
+    const ic=document.getElementById('login-icon-fallback'); if(ic) ic.style.display='';
+  }catch(e){}
+  _l3d=null;
+}
+
+// Efek miring 3D pada kartu (hanya perangkat dengan mouse; hormati "hemat gerak")
+(function(){
+  if(!window.matchMedia) return;
+  if(!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const SEL='.stat-card,.cat-tile';
+  document.addEventListener('pointermove',e=>{
+    const el=e.target.closest&&e.target.closest(SEL);
+    if(!el) return;
+    const r=el.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5;
+    el.style.transform=`perspective(700px) rotateX(${(-y*7).toFixed(2)}deg) rotateY(${(x*9).toFixed(2)}deg) translateY(-3px)`;
+  });
+  document.addEventListener('pointerout',e=>{
+    const el=e.target.closest&&e.target.closest(SEL);
+    if(!el) return;
+    if(e.relatedTarget&&el.contains(e.relatedTarget)) return;
+    el.style.transform='';
+  });
+})();
 
 // ============================================================
 // RESET PASSWORD (dari link email "Send password recovery")
@@ -5522,6 +5659,7 @@ window.addEventListener('DOMContentLoaded', async()=>{
   await loadConfig(); // Load URL & Key dari server dulu
   const isResetLink = checkResetPasswordLink();
   if(!isResetLink) init();
+  initLogin3D();
 });
 
 </script>
