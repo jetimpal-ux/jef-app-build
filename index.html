@@ -68,6 +68,8 @@ input,select,textarea{font-family:var(--font-body);}
 .area-opt{display:inline-block;padding:3px 10px;border:1px dashed var(--border2);border-radius:14px;font-size:12px;color:var(--text2);background:var(--bg2);cursor:pointer;user-select:none;}
 .area-opt:hover{border-color:var(--primary);color:var(--primary);}
 .area-opt.on{background:var(--primary);color:#fff;border:1px solid var(--primary);}
+.area-manage{font-size:11px;color:var(--primary);cursor:pointer;margin-left:8px;font-weight:600;white-space:nowrap;}
+.area-manage:hover{text-decoration:underline;}
 /* Loading 3D: kubus berputar (CSS murni, tanpa library) */
 #loading-overlay{perspective:700px;}
 .cube3d{width:44px;height:44px;position:relative;transform-style:preserve-3d;animation:cube-spin 1.8s linear infinite;}
@@ -688,6 +690,27 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
 </div>
 
 <!-- MODALS GLOBAL (selalu ada di DOM) -->
+<div id="modal-area-dalam" class="modal-overlay" style="z-index:1100" onclick="if(event.target===this)closeModal('modal-area-dalam')">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <span class="modal-title">Kelola Daftar Bagian Dalam</span>
+      <button class="modal-close" onclick="closeModal('modal-area-dalam')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.5">
+        Tulis <b>satu bagian per baris</b>. Tambah baris untuk menambah bagian, ubah tulisan untuk mengedit, hapus baris untuk menghapus.
+        Maksimal 30 bagian, 40 huruf per bagian. Perubahan berlaku untuk Work Order berikutnya (tanda yang sudah tersimpan di WO lama tidak berubah).
+      </div>
+      <textarea id="f-area-dalam" class="form-input" rows="11" style="font-family:inherit;line-height:1.6"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="woOtherReset()" style="margin-right:auto">Kembalikan standar</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-area-dalam')">Batal</button>
+      <button class="btn btn-primary" onclick="woOtherSave()"><i class="ti ti-device-floppy"></i>Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-mekanik" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-mekanik')">
   <div class="modal modal-sm">
     <div class="modal-header">
@@ -2540,6 +2563,7 @@ async function openWO(wo=null){
   _woAreas=parseWoAreas(wo?.area_kerusakan);
   window._woHasAreaCol=!!(wo&&Object.prototype.hasOwnProperty.call(wo,'area_kerusakan'));
   renderWoAreaList();
+  await loadWoOtherList();
   renderWoOtherPicker();
   setTimeout(initWo3D,80);
 
@@ -5724,15 +5748,47 @@ function renderWoAreaList(){
   el.innerHTML=_woAreas.map((m,i)=>`<span class="area-chip">${i+1}. ${escHtml(m.label)}<i class="ti ti-x" onclick="woAreaRemove(${i})"></i></span>`).join('');
 }
 
-// Bagian dalam yang tidak terlihat di model 3D: dipilih lewat daftar (tanpa koordinat)
-const WO_OTHER_AREAS=['Ruang mesin','Transmisi / girboks','Kaki-kaki / suspensi','Rem','Kabin / interior','Dashboard','Jok','AC','Kelistrikan','Bagasi (dalam)'];
+// Bagian dalam yang tidak terlihat di model 3D: dipilih lewat daftar (tanpa koordinat).
+// Daftar bisa diubah owner/admin lewat tombol "Kelola daftar". Disimpan di
+// pengaturan.daftar_area_dalam (semua perangkat) dengan cadangan di localStorage.
+const WO_OTHER_DEFAULT=['Ruang mesin','Transmisi / girboks','Kaki-kaki / suspensi','Rem','Kabin / interior','Dashboard','Jok','AC','Kelistrikan','Bagasi (dalam)'];
+let _woOtherList=WO_OTHER_DEFAULT.slice();
+
+function sanitizeOtherList(arr){
+  const out=[];
+  (Array.isArray(arr)?arr:[]).forEach(x=>{
+    const t=String(x==null?'':x).replace(/\s+/g,' ').trim().slice(0,40);
+    if(t&&!out.some(o=>o.toLowerCase()===t.toLowerCase())) out.push(t);
+  });
+  return out.slice(0,30);
+}
+
+async function loadWoOtherList(){
+  let list=null;
+  try{
+    const st=await getSettings();
+    if(st&&st.daftar_area_dalam) list=sanitizeOtherList(JSON.parse(st.daftar_area_dalam));
+  }catch(e){}
+  if(!list||!list.length){
+    try{ const l=JSON.parse(localStorage.getItem('wo_other_areas')||'null'); if(Array.isArray(l)) list=sanitizeOtherList(l); }catch(e){}
+  }
+  _woOtherList=(list&&list.length)?list:WO_OTHER_DEFAULT.slice();
+}
+
+// Daftar yang tampil = daftar resmi + bagian yang sudah terpilih di WO ini tapi sudah dihapus dari daftar
+function woOtherDisplay(){
+  const extra=_woAreas.filter(m=>m.other&&!_woOtherList.includes(m.label)).map(m=>m.label);
+  return _woOtherList.concat(extra);
+}
 
 function renderWoOtherPicker(){
   const el=document.getElementById('wo-area-other');
   if(!el) return;
-  el.innerHTML='<div style="font-size:11px;color:var(--text3);margin:10px 0 4px">Bagian dalam yang tidak terlihat di model (ketuk untuk memilih):</div>'
+  const canManage=['owner','admin'].includes((currentUser?.role||'').toLowerCase());
+  el.innerHTML='<div style="font-size:11px;color:var(--text3);margin:10px 0 4px">Bagian dalam yang tidak terlihat di model (ketuk untuk memilih):'
+    +(canManage?'<span class="area-manage" onclick="woOtherManage()">✎ Kelola daftar</span>':'')+'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
-    +WO_OTHER_AREAS.map((n,i)=>{
+    +woOtherDisplay().map((n,i)=>{
         const on=_woAreas.some(m=>m.other&&m.label===n);
         return `<span class="area-opt${on?' on':''}" onclick="woAreaToggleOther(${i})">${on?'✓ ':''}${escHtml(n)}</span>`;
       }).join('')
@@ -5740,11 +5796,44 @@ function renderWoOtherPicker(){
 }
 
 function woAreaToggleOther(i){
-  const n=WO_OTHER_AREAS[i];
+  const n=woOtherDisplay()[i];
+  if(n==null) return;
   const k=_woAreas.findIndex(m=>m.other&&m.label===n);
   if(k>=0) _woAreas.splice(k,1); else _woAreas.push({label:n,other:true});
   renderWoAreaList(); renderWoOtherPicker();
   if(_wo3d) _wo3d.sync();
+}
+
+function woOtherManage(){
+  document.getElementById('f-area-dalam').value=_woOtherList.join('\n');
+  openModal('modal-area-dalam');
+}
+function woOtherReset(){
+  document.getElementById('f-area-dalam').value=WO_OTHER_DEFAULT.join('\n');
+}
+async function woOtherSave(){
+  const list=sanitizeOtherList(document.getElementById('f-area-dalam').value.split('\n'));
+  if(!list.length){ showToast('Isi minimal 1 bagian','error'); return; }
+  showLoading(true);
+  let synced=false;
+  try{
+    localStorage.setItem('wo_other_areas',JSON.stringify(list));
+    let st=await getSettings();
+    const hasCol=o=>o&&Object.prototype.hasOwnProperty.call(o,'daftar_area_dalam');
+    if(isOnline&&st&&!hasCol(st)){                       // cache lama belum punya kolom -> cek data terbaru
+      try{ const {data}=await sb.from('pengaturan').select('*').limit(1); if(data&&data.length) st=data[0]; }catch(e){}
+    }
+    if(st&&st.id&&hasCol(st)){
+      await dbOp('pengaturan','UPDATE',{id:st.id,payload:{daftar_area_dalam:JSON.stringify(list)}});
+      synced=true;
+    }
+  }catch(e){ console.warn('[daftar area] gagal simpan ke database:',e); }
+  _woOtherList=list;
+  renderWoOtherPicker();
+  closeModal('modal-area-dalam');
+  showLoading(false);
+  if(synced) showToast('Daftar bagian dalam disimpan');
+  else showToast('Disimpan di perangkat ini saja. Jalankan SQL tambah_kolom_daftar_area_dalam.sql agar berlaku di semua perangkat.','info',6000);
 }
 
 function woAreaRemove(i){
