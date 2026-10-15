@@ -70,6 +70,19 @@ input,select,textarea{font-family:var(--font-body);}
 .area-opt.on{background:var(--primary);color:#fff;border:1px solid var(--primary);}
 .area-manage{font-size:11px;color:var(--primary);cursor:pointer;margin-left:8px;font-weight:600;white-space:nowrap;}
 .area-manage:hover{text-decoration:underline;}
+/* Riwayat servis per kendaraan */
+.riwayat-box{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3);padding:10px 12px;font-size:12px;}
+.riwayat-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin-bottom:6px;}
+.riwayat-km{color:var(--primary);font-weight:700;}
+.riwayat-item{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:6px 0;border-top:1px dashed var(--border2);}
+.rw-date{font-weight:600;white-space:nowrap;}
+.rw-no{color:var(--text3);font-family:monospace;font-size:11px;}
+.rw-txt{flex:1;min-width:160px;color:var(--text2);}
+.rw-money{font-weight:700;white-space:nowrap;}
+.riwayat-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;}
+.riwayat-sum>div{background:var(--bg3);border-radius:var(--radius);padding:10px 12px;}
+.riwayat-sum .k{font-size:10px;text-transform:uppercase;color:var(--text3);font-weight:700;letter-spacing:.4px;}
+.riwayat-sum .v{font-size:16px;font-weight:800;margin-top:2px;}
 /* Loading 3D: kubus berputar (CSS murni, tanpa library) */
 #loading-overlay{perspective:700px;}
 .cube3d{width:44px;height:44px;position:relative;transform-style:preserve-3d;animation:cube-spin 1.8s linear infinite;}
@@ -589,7 +602,7 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
       </button>
 
       <div style="text-align:center;margin-top:16px;font-size:11px;color:#546e7a;font-family:'Poppins',sans-serif">
-        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-C
+        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-D
       </div>
     </div>
   </div>
@@ -631,7 +644,7 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
       </button>
 
       <div style="text-align:center;margin-top:16px;font-size:11px;color:#546e7a;font-family:'Poppins',sans-serif">
-        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-C
+        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-D
       </div>
     </div>
   </div>
@@ -655,7 +668,7 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
       <div class="sb-logo-icon" style="background:var(--primary)"><i class="ti ti-tool" style="color:#fff;font-size:16px"></i></div>
       <div>
         <div class="sb-logo-text">Jef-app-build</div>
-        <div class="sb-logo-sub">Je.V.3.26 - Ora et Labora &middot; build 11Okt26-C</div>
+        <div class="sb-logo-sub">Je.V.3.26 - Ora et Labora &middot; build 11Okt26-D</div>
       </div>
       <div id="topnav-user">
         <div style="text-align:right">
@@ -1928,6 +1941,7 @@ function renderKendRows(data,pels){
     <td>${k.warna||'-'}</td>
     <td style="font-size:11px;color:var(--text3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${k.catatan||'-'}</td>
     <td><div class="table-actions">
+      <button class="btn btn-outline btn-xs" title="Riwayat servis" data-id="${escHtml(k.id)}" data-plat="${escHtml(k.no_plat)}" onclick="openRiwayatKend(this.dataset.id,this.dataset.plat)"><i class="ti ti-history"></i></button>
       <button class="btn btn-outline btn-xs" onclick='editKend(${JSON.stringify(k)})'><i class="ti ti-edit"></i></button>
       <button class="btn btn-danger btn-xs" onclick="delKend('${k.id}','${k.no_plat}')"><i class="ti ti-trash"></i></button>
     </div></td>
@@ -2478,6 +2492,7 @@ async function openWO(wo=null){
         </div>
         <div class="form-group"><label class="form-label">Pelanggan</label><input id="f-wo-pel" class="form-input" placeholder="Otomatis / manual" value="${wo?.nama_pelanggan||''}"/><input type="hidden" id="f-wo-pel-id" value="${wo?.pelanggan_id||''}"/></div>
         <div class="form-group"><label class="form-label">KM Selesai Service</label><input id="f-wo-km" class="form-input" type="number" min="0" placeholder="misal: 45000" value="${wo?.km_selesai??''}"/></div>
+        <div class="form-group form-full" id="wo-riwayat" style="display:none"></div>
         <div class="form-group form-full"><label class="form-label">Mekanik <span style="font-size:10px;color:var(--text3)">(bisa lebih dari 1)</span></label>
           <div id="f-wo-mek-wrap" style="border:1.5px solid var(--border);border-radius:8px;padding:8px;min-height:38px;background:var(--input-bg);cursor:pointer" onclick="toggleMekDD()">
             <div id="f-wo-mek-tags" style="display:flex;flex-wrap:wrap;gap:4px"><span style="color:var(--text3);font-size:13px">-- Pilih Mekanik --</span></div>
@@ -2556,11 +2571,14 @@ async function openWO(wo=null){
     setTimeout(()=>{
       const sel=document.getElementById('f-wo-kend');
       if(sel) sel.value=wo.kendaraan_id;
+      woRiwayatRefresh();                      // kendaraan WO yang diedit baru terpilih di sini
     },50);
   }
   renderWOParts();renderMekTags();hitungTotalWO();
   showLoading(false);
   openModal('modal-wo');
+  window._woEditId=wo?.id||null;
+  woRiwayatRefresh();
   _woAreas=parseWoAreas(wo?.area_kerusakan);
   window._woHasAreaCol=!!(wo&&Object.prototype.hasOwnProperty.call(wo,'area_kerusakan'));
   renderWoAreaList();
@@ -2597,6 +2615,7 @@ function onKendChange(){
   const pelId = opt?.dataset.pel||'';
   const hiddenPelId = document.getElementById('f-wo-pel-id');
   if(hiddenPelId) hiddenPelId.value = pelId;
+  woRiwayatRefresh();
 }
 
 function addWOPart(){
@@ -5974,6 +5993,132 @@ async function initWo3D(){
     say('Tampilan 3D tidak didukung di perangkat ini. Tanda yang sudah ada tetap tersimpan.');
     _wo3d=null;
   }
+}
+
+// ============================================================
+// RIWAYAT SERVIS PER KENDARAAN
+// ============================================================
+// Diambil dari Work Order yang sudah tersimpan (tidak butuh kolom/tabel baru).
+// Tampil di form WO setelah memilih kendaraan, dan lewat tombol "Riwayat"
+// di halaman Data Kendaraan. Nominal biaya disembunyikan untuk role mekanik.
+const RIWAYAT_COLS_FULL='id,no_wo,tanggal,status,keluhan,diagnosa,total,km_selesai,area_kerusakan,nama_mekanik';
+const RIWAYAT_COLS_BASE='id,no_wo,tanggal,status,keluhan,diagnosa,total,nama_mekanik';
+let _riwayatReq=0;
+
+const riwayatCanSeeMoney=()=>(currentUser?.role||'').toLowerCase()!=='mekanik';
+
+function riwayatAgo(d){
+  if(!d) return '';
+  const n=Math.floor((Date.now()-new Date(d).getTime())/86400000);
+  if(isNaN(n)) return '';
+  if(n<=0) return 'hari ini';
+  if(n<30) return n+' hari lalu';
+  if(n<365) return Math.floor(n/30)+' bulan lalu';
+  return (n/365).toFixed(1).replace('.0','')+' tahun lalu';
+}
+
+function riwayatSort(rows){
+  return rows.slice().sort((a,b)=>String(b.tanggal||'').localeCompare(String(a.tanggal||''))||String(b.no_wo||'').localeCompare(String(a.no_wo||'')));
+}
+
+// Query langsung (BUKAN loadTbl: loadTbl menyimpan hasil terfilter ke cache tabel dan akan menimpa cache offline)
+async function fetchRiwayatKend(kendId,limit=50){
+  if(!kendId) return {rows:[],offline:false};
+  if(isOnline){
+    for(const cols of [RIWAYAT_COLS_FULL,RIWAYAT_COLS_BASE]){   // database lama belum punya km_selesai/area_kerusakan -> coba kolom dasar
+      try{
+        const {data,error}=await sb.from('work_order').select(cols).eq('kendaraan_id',kendId).order('tanggal',{ascending:false}).limit(limit);
+        if(!error&&Array.isArray(data)) return {rows:riwayatSort(data),offline:false};
+      }catch(e){}
+    }
+  }
+  try{                                                           // offline / gagal: pakai cache lokal
+    let c=await getCache('work_order')||[];
+    c=await mergeQueue('work_order',c);
+    return {rows:riwayatSort(c.filter(w=>w.kendaraan_id===kendId)).slice(0,limit),offline:true};
+  }catch(e){ return {rows:[],offline:true}; }
+}
+
+function riwayatStatusBadge(st){
+  const s=st||'antri';
+  return `<span class="badge ${s==='selesai'?'badge-green':s==='proses'?'badge-orange':'badge-gray'}">${escHtml(s)}</span>`;
+}
+function riwayatText(r,max){
+  const t=String(r.diagnosa||r.keluhan||'-').replace(/\s+/g,' ').trim();
+  return escHtml(t.length>max?t.slice(0,max-1)+'…':t);
+}
+function riwayatKm(r){ return (r.km_selesai!=null&&r.km_selesai!=='')?Number(r.km_selesai):null; }
+
+// Panel ringkas di form Work Order
+async function woRiwayatRefresh(){
+  const box=document.getElementById('wo-riwayat');
+  if(!box) return;
+  const kendId=document.getElementById('f-wo-kend')?.value;
+  const my=++_riwayatReq;
+  if(!kendId){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='block';
+  box.innerHTML='<div class="riwayat-box" style="color:var(--text3)">Memuat riwayat servis...</div>';
+  const {rows:all,offline}=await fetchRiwayatKend(kendId,50);
+  if(my!==_riwayatReq||!document.body.contains(box)) return;     // kendaraan sudah diganti / modal ditutup
+  const rows=all.filter(r=>r.id!==window._woEditId);              // WO yang sedang diedit tidak dihitung
+  const note=offline?' <span style="color:var(--text3)">(data offline)</span>':'';
+  if(!rows.length){
+    box.innerHTML='<div class="riwayat-box" style="color:var(--text3)">Riwayat servis: belum ada Work Order sebelumnya untuk kendaraan ini.'+note+'</div>';
+    return;
+  }
+  const last=rows[0], kmRow=rows.find(r=>riwayatKm(r)!=null), money=riwayatCanSeeMoney();
+  const kmEl=document.getElementById('f-wo-km');
+  if(kmEl&&kmRow) kmEl.placeholder='KM terakhir: '+fmtNum(riwayatKm(kmRow));
+  const plat=(document.getElementById('f-wo-kend')?.selectedOptions[0]?.text||'').split(' - ')[0];   // hanya plat (tanpa merek)
+  box.innerHTML='<div class="riwayat-box">'
+    +'<div class="riwayat-head"><b>Riwayat servis kendaraan ini</b>'
+    +`<span>${rows.length} kali · terakhir ${escHtml(fmtDate(last.tanggal))}${riwayatAgo(last.tanggal)?' ('+riwayatAgo(last.tanggal)+')':''}</span>`
+    +(kmRow?`<span class="riwayat-km">KM terakhir: ${escHtml(fmtNum(riwayatKm(kmRow)))} km</span>`:'')
+    +note+'</div>'
+    +rows.slice(0,3).map(r=>`<div class="riwayat-item"><span class="rw-date">${escHtml(fmtDate(r.tanggal))}</span><span class="rw-no">${escHtml(r.no_wo||'')}</span>${riwayatStatusBadge(r.status)}<span class="rw-txt">${riwayatText(r,70)}</span>${money?`<span class="rw-money">${escHtml(fmt(r.total))}</span>`:''}</div>`).join('')
+    +`<div style="margin-top:6px"><span class="area-manage" style="margin-left:0" onclick="openRiwayatKend(document.getElementById('f-wo-kend').value,${escHtml(JSON.stringify(plat))})">Lihat semua riwayat${rows.length>3?' ('+rows.length+')':''} →</span></div>`
+    +'</div>';
+}
+
+// Jendela riwayat lengkap (dari form WO maupun halaman Data Kendaraan)
+async function openRiwayatKend(kendId,plat){
+  if(!kendId) return;
+  const money=riwayatCanSeeMoney();
+  ensureModal('modal-riwayat-kend',`<div class="modal" style="max-width:900px;width:100%">
+    <div class="modal-header"><span class="modal-title">Riwayat Servis — ${escHtml(plat||'')}</span><button class="modal-close" onclick="closeModal('modal-riwayat-kend')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body" id="riwayat-body"><div style="color:var(--text3);padding:12px">Memuat riwayat servis...</div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-riwayat-kend')">Tutup</button></div>
+  </div>`);
+  document.getElementById('modal-riwayat-kend').style.zIndex=1100;      // di atas jendela Work Order
+  openModal('modal-riwayat-kend');
+  const {rows,offline}=await fetchRiwayatKend(kendId,200);
+  const body=document.getElementById('riwayat-body');
+  if(!body) return;
+  if(!rows.length){
+    body.innerHTML='<div style="color:var(--text3);padding:20px;text-align:center"><i class="ti ti-history" style="font-size:28px;display:block;margin-bottom:8px"></i>Belum ada riwayat servis untuk kendaraan ini.'+(offline?'<br><small>(data offline)</small>':'')+'</div>';
+    return;
+  }
+  const kmRow=rows.find(r=>riwayatKm(r)!=null);
+  const total=rows.reduce((a,r)=>a+(Number(r.total)||0),0);
+  body.innerHTML=`<div class="riwayat-sum">
+      <div><div class="k">Jumlah servis</div><div class="v">${rows.length} kali</div></div>
+      <div><div class="k">Servis terakhir</div><div class="v" style="font-size:13px">${escHtml(fmtDate(rows[0].tanggal))}<br><span style="font-weight:500;color:var(--text3)">${escHtml(riwayatAgo(rows[0].tanggal))}</span></div></div>
+      <div><div class="k">KM terakhir</div><div class="v">${kmRow?escHtml(fmtNum(riwayatKm(kmRow)))+' km':'-'}</div></div>
+      ${money?`<div><div class="k">Total biaya servis</div><div class="v">${escHtml(fmt(total))}</div></div>`:''}
+    </div>
+    ${offline?'<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Data dari penyimpanan offline, bisa belum lengkap.</div>':''}
+    <div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>No. WO</th><th>Keluhan / Pekerjaan</th><th>Mekanik</th><th>Area ditandai</th><th>KM</th><th>Status</th>${money?'<th style="text-align:right">Total</th>':''}</tr></thead><tbody>
+    ${rows.map(r=>`<tr>
+      <td style="white-space:nowrap">${escHtml(fmtDate(r.tanggal))}</td>
+      <td><code>${escHtml(r.no_wo||'')}</code>${r.id===window._woEditId?' <span class="badge badge-brown" style="white-space:nowrap">WO ini</span>':''}</td>
+      <td style="max-width:240px;font-size:12px">${riwayatText(r,120)}</td>
+      <td style="font-size:12px">${escHtml(r.nama_mekanik||'-')}</td>
+      <td style="font-size:11px;color:var(--text3);max-width:150px">${escHtml(areaLabelsText(r.area_kerusakan)||'-')}</td>
+      <td style="white-space:nowrap">${riwayatKm(r)!=null?escHtml(fmtNum(riwayatKm(r))):'-'}</td>
+      <td>${riwayatStatusBadge(r.status)}</td>
+      ${money?`<td style="text-align:right;font-weight:600;white-space:nowrap">${escHtml(fmt(r.total))}</td>`:''}
+    </tr>`).join('')}
+    </tbody></table></div>`;
 }
 
 // ============================================================
