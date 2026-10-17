@@ -602,7 +602,7 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
       </button>
 
       <div style="text-align:center;margin-top:16px;font-size:11px;color:#546e7a;font-family:'Poppins',sans-serif">
-        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-D
+        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-E
       </div>
     </div>
   </div>
@@ -644,7 +644,7 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
       </button>
 
       <div style="text-align:center;margin-top:16px;font-size:11px;color:#546e7a;font-family:'Poppins',sans-serif">
-        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-D
+        by.Jefmanado 2026 &mdash; v3.26 &middot; build 11Okt26-E
       </div>
     </div>
   </div>
@@ -668,7 +668,7 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
       <div class="sb-logo-icon" style="background:var(--primary)"><i class="ti ti-tool" style="color:#fff;font-size:16px"></i></div>
       <div>
         <div class="sb-logo-text">Jef-app-build</div>
-        <div class="sb-logo-sub">Je.V.3.26 - Ora et Labora &middot; build 11Okt26-D</div>
+        <div class="sb-logo-sub">Je.V.3.26 - Ora et Labora &middot; build 11Okt26-E</div>
       </div>
       <div id="topnav-user">
         <div style="text-align:right">
@@ -763,8 +763,6 @@ code{font-family:monospace;background:none;color:var(--orange);padding:0;border-
 // URL & Key diambil dari server via /api/config (lebih aman)
 let SUPABASE_URL = 'https://bscoyiwjaztliyjkrhmx.supabase.co';
 let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzY295aXdqYXp0bGl5amtyaG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzAxNTYsImV4cCI6MjA5NjM0NjE1Nn0.3Nu6_BtGCXU1EUIKAaeWXRgDToXKW8oHGadO4BwwFUs';
-
-
 async function loadConfig(){
   try{
     const r = await fetch('/api/config');
@@ -1577,40 +1575,7 @@ pages['dashboard']=async()=>{
       <div id="d-alerts" style="padding:10px;min-height:80px;font-size:13px;color:var(--text3);display:flex;align-items:center;justify-content:center">Memuat...</div>
     </div>
   </div>
-
-  <!-- ── FOTO BENGKEL (2 KOLOM) ──────────────────────────── -->
-  <div id="dash-foto-wrap" style="margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:14px">
-    ${[1,2].map(slot=>`
-    <div>
-      <div id="dash-foto-box-${slot}" style="
-        width:100%;border-radius:var(--radius2);overflow:hidden;
-        background:var(--bg2);border:2px dashed var(--border2);
-        min-height:200px;display:flex;align-items:center;justify-content:center;
-        position:relative;cursor:pointer;transition:border-color .2s;"
-        onclick="document.getElementById('dash-foto-input-${slot}').click()"
-        ondragover="event.preventDefault();this.style.borderColor='var(--orange)'"
-        ondragleave="this.style.borderColor='var(--border2)'"
-        ondrop="dropFotoDash(event,${slot})">
-        <img id="dash-foto-img-${slot}" src="" alt=""
-          style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0;"/>
-        <div id="dash-foto-placeholder-${slot}" style="text-align:center;padding:32px;color:var(--text3)">
-          <i class="ti ti-photo" style="font-size:40px;display:block;margin-bottom:10px;color:var(--border2)"></i>
-          <div style="font-size:13px;font-weight:600;color:var(--text3)">Foto ${slot} — Klik atau seret ke sini</div>
-          <div style="font-size:11px;margin-top:4px">JPG, PNG — ditampilkan di dashboard bengkel</div>
-          <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="event.stopPropagation();document.getElementById('dash-foto-input-${slot}').click()">
-            <i class="ti ti-upload"></i> Pilih Foto
-          </button>
-        </div>
-        <button id="dash-foto-del-${slot}" onclick="event.stopPropagation();hapusFotoDash(${slot})"
-          style="display:none;position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);
-          color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;
-          font-family:var(--font-body)">
-          <i class="ti ti-trash"></i> Hapus Foto
-        </button>
-      </div>
-      <input type="file" id="dash-foto-input-${slot}" accept="image/*" style="display:none" onchange="uploadFotoDash(this,${slot})"/>
-    </div>`).join('')}
-  </div>`;
+`;
   const td=today();
   // Load semua data parallel — pjAll & woAll semua data (bukan filter hari ini)
   const [pjAll,woAll,brg,penAll] = await Promise.all([
@@ -1699,66 +1664,15 @@ pages['dashboard']=async()=>{
         <div style="font-weight:700;font-size:12px;color:var(--${a.c})">${a.v}</div>
       </div>`).join('')+`</div>`:'<span style="color:var(--green)"><i class="ti ti-check"></i> Semua baik</span>';
   }
-  // Load foto dashboard
-  setTimeout(loadFotoDash, 150);
 };
 
 // ============================================================
-// FOTO DASHBOARD (2 SLOT)
+// BERSIHKAN SISA FOTO DASHBOARD (fitur foto dashboard sudah dihapus)
 // ============================================================
-function loadFotoDash(slot){
-  const slots = slot ? [slot] : [1,2];
-  slots.forEach(s=>{
-    const foto=localStorage.getItem('dash_foto_'+s);
-    const img=document.getElementById('dash-foto-img-'+s);
-    const ph=document.getElementById('dash-foto-placeholder-'+s);
-    const del=document.getElementById('dash-foto-del-'+s);
-    if(foto&&img){
-      img.src=foto; img.style.display='block';
-      if(ph) ph.style.display='none';
-      if(del) del.style.display='block';
-      const box=document.getElementById('dash-foto-box-'+s);
-      if(box){box.style.border='none';box.style.minHeight='240px';}
-    }
-  });
-}
-function uploadFotoDash(input,slot){
-  const file=input.files[0];
-  if(!file) return;
-  if(file.size>3*1024*1024){showToast('Foto maksimal 3MB','error');return;}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    localStorage.setItem('dash_foto_'+slot,e.target.result);
-    loadFotoDash(slot);
-    showToast('Foto berhasil dipasang');
-  };
-  reader.readAsDataURL(file);
-}
-function dropFotoDash(event,slot){
-  event.preventDefault();
-  const box=document.getElementById('dash-foto-box-'+slot);
-  if(box) box.style.borderColor='var(--border2)';
-  const file=event.dataTransfer.files[0];
-  if(!file||!file.type.startsWith('image/')) return;
-  const input=document.getElementById('dash-foto-input-'+slot);
-  const dt=new DataTransfer();
-  dt.items.add(file);
-  input.files=dt.files;
-  uploadFotoDash(input,slot);
-}
-function hapusFotoDash(slot){
-  if(!confirm('Hapus foto dari dashboard?')) return;
-  localStorage.removeItem('dash_foto_'+slot);
-  const img=document.getElementById('dash-foto-img-'+slot);
-  const ph=document.getElementById('dash-foto-placeholder-'+slot);
-  const del=document.getElementById('dash-foto-del-'+slot);
-  const box=document.getElementById('dash-foto-box-'+slot);
-  if(img){img.src='';img.style.display='none';}
-  if(ph) ph.style.display='flex';
-  if(del) del.style.display='none';
-  if(box){box.style.border='2px dashed var(--border2)';box.style.minHeight='200px';}
-  showToast('Foto dihapus');
-}
+// Dulu foto disimpan sebagai teks base64 di localStorage (bisa beberapa MB) dan
+// dibaca setiap dashboard dibuka. Fiturnya dihapus supaya aplikasi lebih ringan;
+// sisa foto lama di browser ikut dibersihkan agar ruang penyimpanan kembali.
+(function(){ try{ ['dash_foto','dash_foto_1','dash_foto_2'].forEach(k=>localStorage.removeItem(k)); }catch(e){} })();
 
 // ============================================================
 // KAS DASHBOARD HELPERS
